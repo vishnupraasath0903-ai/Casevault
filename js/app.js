@@ -76,47 +76,61 @@ class App {
   }
 
   render() {
-    const root = document.getElementById('app');
-    if (!root) return;
+    try {
+      const root = document.getElementById('app');
+      if (!root) return;
 
-    // If on Auth/Landing view
-    if (this.currentView === 'auth' || !State.currentUser.isAuthenticated) {
-      root.innerHTML = `<div class="auth-wrapper">${AuthView.render()}</div>`;
-      AuthView.bindEvents(() => {
-        this.currentView = 'dashboard';
-        this.render();
-      });
-      return;
-    }
+      // If on Auth/Landing view
+      if (this.currentView === 'auth' || !State.currentUser.isAuthenticated) {
+        root.innerHTML = `<div class="auth-wrapper">${AuthView.render()}</div>`;
+        AuthView.bindEvents(() => {
+          this.currentView = 'dashboard';
+          this.render();
+        });
+        return;
+      }
 
-    // Otherwise render standard enterprise dashboard structure
-    root.innerHTML = `
-      <div class="app-container">
-        <!-- Collapsible Sidebar -->
-        ${SidebarComponent.render(this.currentView)}
+      // Otherwise render standard enterprise dashboard structure
+      root.innerHTML = `
+        <div class="app-container">
+          <!-- Collapsible Sidebar -->
+          ${SidebarComponent.render(this.currentView)}
 
-        <!-- Main Wrapper (Navbar + Viewport) -->
-        <div class="main-wrapper">
-          ${NavbarComponent.render()}
-          <main class="content-viewport" id="viewport-container">
-            ${this.renderCurrentView()}
-          </main>
+          <!-- Main Wrapper (Navbar + Viewport) -->
+          <div class="main-wrapper">
+            ${NavbarComponent.render()}
+            <main class="content-viewport" id="viewport-container">
+              ${this.renderCurrentView()}
+            </main>
+          </div>
         </div>
-      </div>
-    `;
+      `;
 
-    // Bind navigation & component events
-    SidebarComponent.bindEvents((view) => this.navigateTo(view));
-    NavbarComponent.bindEvents(
-      (view, reRenderOnly) => {
-        if (reRenderOnly) this.render();
-        else if (view) this.navigateTo(view);
-      },
-      (searchQuery) => this.handleGlobalSearch(searchQuery)
-    );
+      // Bind navigation & component events
+      SidebarComponent.bindEvents((view) => this.navigateTo(view));
+      NavbarComponent.bindEvents(
+        (view, reRenderOnly) => {
+          if (reRenderOnly) this.render();
+          else if (view) this.navigateTo(view);
+        },
+        (searchQuery) => this.handleGlobalSearch(searchQuery)
+      );
 
-    // Bind current view events
-    this.bindCurrentViewEvents();
+      // Bind current view events
+      this.bindCurrentViewEvents();
+    } catch (err) {
+      console.error('CaseVault Render Error:', err);
+      const root = document.getElementById('app');
+      if (root) {
+        root.innerHTML = `
+          <div style="padding: 40px; color: #ef4444; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e17; min-height: 100vh;">
+            <h2 style="color: #f87171; margin-bottom: 12px;">CaseVault Render Error (${this.currentView})</h2>
+            <pre style="background: #151d2f; padding: 16px; border-radius: 8px; color: #fca5a5; overflow: auto; border: 1px solid #dc2626;">${err.stack || err.message}</pre>
+            <button onclick="window.location.reload()" style="margin-top: 16px; padding: 10px 20px; background: #06b6d4; color: #020817; border: none; border-radius: 6px; cursor: pointer; font-weight: 700;">Reload App</button>
+          </div>
+        `;
+      }
+    }
   }
 
   renderCurrentView() {
@@ -165,6 +179,10 @@ class App {
 
   bindCurrentViewEvents() {
     const onNav = (view, reRender, params) => {
+      if (typeof reRender === 'object' && reRender !== null) {
+        params = reRender;
+        reRender = false;
+      }
       if (reRender) this.render();
       else if (view) this.navigateTo(view, params);
     };
@@ -245,7 +263,29 @@ class App {
   }
 }
 
-// Instantiate application on DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-  window.casevaultApp = new App();
-});
+// Instantiate application on DOM ready or immediately if already loaded
+function initCaseVaultApp() {
+  if (!window.casevaultApp) {
+    try {
+      window.casevaultApp = new App();
+    } catch (err) {
+      console.error('CaseVault Initialization Error:', err);
+      const appEl = document.getElementById('app');
+      if (appEl) {
+        appEl.innerHTML = `
+          <div style="padding: 40px; color: #ef4444; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e17; min-height: 100vh;">
+            <h2 style="color: #f87171; margin-bottom: 12px;">CaseVault Initialization Error</h2>
+            <p style="color: #94a3b8; margin-bottom: 16px;">An error occurred while mounting CaseVault:</p>
+            <pre style="background: #151d2f; padding: 16px; border-radius: 8px; color: #fca5a5; overflow: auto; border: 1px solid #dc2626;">${err.stack || err.message}</pre>
+          </div>
+        `;
+      }
+    }
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCaseVaultApp);
+} else {
+  initCaseVaultApp();
+}

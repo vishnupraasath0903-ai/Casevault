@@ -5,21 +5,25 @@
 class ToastManager {
   constructor() {
     this.container = null;
-    this.init();
   }
 
-  init() {
-    let el = document.getElementById('toast-container');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'toast-container';
-      el.className = 'toast-container';
-      document.body.appendChild(el);
+  getContainer() {
+    if (!this.container && typeof document !== 'undefined') {
+      let el = document.getElementById('toast-container');
+      if (!el && document.body) {
+        el = document.createElement('div');
+        el.id = 'toast-container';
+        el.className = 'toast-container';
+        document.body.appendChild(el);
+      }
+      this.container = el;
     }
-    this.container = el;
+    return this.container;
   }
 
   show(title, message, type = 'info', duration = 4000) {
+    const container = this.getContainer();
+    if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
 
