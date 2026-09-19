@@ -155,7 +155,7 @@ export const DuplicatesView = {
               <span class="code-cell" style="font-size: 10px; color: var(--accent-cyan); word-break: break-all;">${docA.sha256}</span>
             </div>
             <div class="dup-snippet-box">
-              "${docA.contentSnippet?.substring(0, 160) || 'Exhibit content payload'..."}
+              "${docA.contentSnippet?.substring(0, 160) || 'Exhibit content payload'}"
             </div>
           </div>
 
@@ -183,7 +183,7 @@ export const DuplicatesView = {
               <span class="code-cell" style="font-size: 10px; color: var(--accent-cyan); word-break: break-all;">${docB.sha256}</span>
             </div>
             <div class="dup-snippet-box">
-              "${docB.contentSnippet?.substring(0, 160) || 'Exhibit content payload'..."}
+              "${docB.contentSnippet?.substring(0, 160) || 'Exhibit content payload'}"
             </div>
           </div>
         </div>
